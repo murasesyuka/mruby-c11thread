@@ -5,6 +5,7 @@ MRuby::Gem::Specification.new('mruby-thread') do |spec|
   if build.toolchains.include?("androideabi")
     spec.cc.flags << '-DHAVE_PTHREADS'
   else
+    spec.cc.flags << '-DHAVE_PTHREAD'
     spec.linker.libraries << ['pthread']
   end
 end

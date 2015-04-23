@@ -17,7 +17,7 @@
 #include <windows.h>
 #endif
 #include <ctype.h>
-#include <pthread.h>
+#include <threads.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
