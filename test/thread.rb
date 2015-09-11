@@ -87,10 +87,6 @@ assert('Thread migrates Hash') do
   a.join == {'abc_key' => 'abc_value', 'cba_key' => 'cba_value'}
 end
 
-assert('Object.const_defined? :Queue') do
-  Object.const_defined?(:Queue)
-end
-
 assert('Thread migrates Queue') do
   q = Queue.new
   a = Thread.new(q){|q| q.push 1 }
