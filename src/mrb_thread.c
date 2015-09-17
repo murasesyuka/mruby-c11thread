@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct {
   int argc;
@@ -526,69 +527,64 @@ mrb_queue_clear(mrb_state* mrb, mrb_value self) {
 }
 
 static mrb_value
-mrb_queue_push(mrb_state* mrb, mrb_value self) {
+mrb_queue_push_from_tail(mrb_state* mrb, mrb_value self, bool is_tail) {
   mrb_value arg;
   mrb_queue_context* context = DATA_PTR(self);
   mrb_queue_lock(mrb, self);
   mrb_get_args(mrb, "o", &arg);
-  mrb_ary_push(context->mrb, context->queue, migrate_simple_value(mrb, arg, context->mrb));
+  if(is_tail){
+    mrb_ary_push(context->mrb, context->queue, migrate_simple_value(mrb, arg, context->mrb));
+  }else{
+    mrb_ary_unshift(context->mrb, context->queue, migrate_simple_value(mrb, arg, context->mrb));
+  }
   mrb_queue_unlock(mrb, self);
   if (mtx_unlock(&context->queue_lock) != 0) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "cannot unlock");
   }
   return mrb_nil_value();
+}
+
+static mrb_value
+mrb_queue_pop_from_head(mrb_state* mrb, mrb_value self, bool is_head) {
+  mrb_value ret;
+  mrb_queue_context* context = DATA_PTR(self);
+  int len;
+  mrb_queue_lock(mrb, self);
+  len = RARRAY_LEN(context->queue);
+  mrb_queue_unlock(mrb, self);
+  if (len == 0) {
+    if (mtx_lock(&context->queue_lock) != 0) {
+      mrb_raise(mrb, E_RUNTIME_ERROR, "cannot lock");
+    }
+  }
+  mrb_queue_lock(mrb, self);
+  if(is_head){
+    ret = migrate_simple_value(context->mrb, mrb_ary_pop(context->mrb, context->queue), mrb);
+  }else{
+    ret = migrate_simple_value(context->mrb, mrb_ary_shift(context->mrb, context->queue), mrb);
+  }
+  mrb_queue_unlock(mrb, self);
+  return ret;
+}
+
+static mrb_value
+mrb_queue_push(mrb_state* mrb, mrb_value self) {
+  return mrb_queue_push_from_tail(mrb, self, true);
 }
 
 static mrb_value
 mrb_queue_pop(mrb_state* mrb, mrb_value self) {
-  mrb_value ret;
-  mrb_queue_context* context = DATA_PTR(self);
-  int len;
-  mrb_queue_lock(mrb, self);
-  len = RARRAY_LEN(context->queue);
-  mrb_queue_unlock(mrb, self);
-  if (len == 0) {
-    if (mtx_lock(&context->queue_lock) != 0) {
-      mrb_raise(mrb, E_RUNTIME_ERROR, "cannot lock");
-    }
-  }
-  mrb_queue_lock(mrb, self);
-  ret = migrate_simple_value(context->mrb, mrb_ary_pop(context->mrb, context->queue), mrb);
-  mrb_queue_unlock(mrb, self);
-  return ret;
+  return mrb_queue_pop_from_head(mrb, self, true);
 }
 
 static mrb_value
 mrb_queue_unshift(mrb_state* mrb, mrb_value self) {
-  mrb_value arg;
-  mrb_queue_context* context = DATA_PTR(self);
-  mrb_queue_lock(mrb, self);
-  mrb_get_args(mrb, "o", &arg);
-  mrb_ary_unshift(context->mrb, context->queue, migrate_simple_value(mrb, arg, context->mrb));
-  mrb_queue_unlock(mrb, self);
-  if (mtx_unlock(&context->queue_lock) != 0) {
-    mrb_raise(mrb, E_RUNTIME_ERROR, "cannot unlock");
-  }
-  return mrb_nil_value();
+  return mrb_queue_push_from_tail(mrb, self, false);
 }
 
 static mrb_value
 mrb_queue_shift(mrb_state* mrb, mrb_value self) {
-  mrb_value ret;
-  mrb_queue_context* context = DATA_PTR(self);
-  int len;
-  mrb_queue_lock(mrb, self);
-  len = RARRAY_LEN(context->queue);
-  mrb_queue_unlock(mrb, self);
-  if (len == 0) {
-    if (mtx_lock(&context->queue_lock) != 0) {
-      mrb_raise(mrb, E_RUNTIME_ERROR, "cannot lock");
-    }
-  }
-  mrb_queue_lock(mrb, self);
-  ret = migrate_simple_value(context->mrb, mrb_ary_shift(context->mrb, context->queue), mrb);
-  mrb_queue_unlock(mrb, self);
-  return ret;
+  return mrb_queue_pop_from_head(mrb, self, false);
 }
 
 static mrb_value
