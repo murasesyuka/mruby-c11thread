@@ -93,3 +93,9 @@ assert('Thread migrates Queue') do
   a.join
   q.shift == 1
 end
+
+assert('Thread migrates Mutex') do
+  m = Mutex.new
+  a = Thread.new(m){|m| m.locked? }
+  assert_false a.join
+end
