@@ -28,11 +28,13 @@ assert('Mutex#try_lock') do
   assert_false m.try_lock
 end
 
-assert('Mutex#synchronize') do
+assert('Mutex#synchronize returns true') do
   m = Mutex.new
-  m.synchronize do
-    true
-  end
+  m.synchronize {true} == true
 end
 
+assert('Mutex#synchronize returns Fixnum') do
+  m = Mutex.new
+  m.synchronize {42} == 42
+end
 
