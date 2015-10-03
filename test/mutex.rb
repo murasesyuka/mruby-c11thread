@@ -6,12 +6,12 @@ assert('Object.const_defined? :Mutex') do
 end
 
 assert('Mutex#lock') do
-  //todo
+  #todo
   true
 end
 
 assert('Mutex#unlock') do
-  //todo
+  #todo
   true
 end
 
