@@ -377,6 +377,7 @@ mrb_thread_join(mrb_state* mrb, mrb_value self) {
   return context->result;
 }
 
+#if 0
 static mrb_value
 mrb_thread_kill(mrb_state* mrb, mrb_value self) {
   mrb_value value_context = mrb_iv_get(mrb, self, mrb_intern_lit(mrb, "context"));
@@ -390,6 +391,7 @@ mrb_thread_kill(mrb_state* mrb, mrb_value self) {
   context->mrb = NULL;
   return context->result;
 }
+#endif
 
 static mrb_value
 mrb_thread_alive(mrb_state* mrb, mrb_value self) {
@@ -622,8 +624,10 @@ mrb_mruby_thread_gem_init(mrb_state* mrb) {
   MRB_SET_INSTANCE_TT(_class_thread, MRB_TT_DATA);
   mrb_define_method(mrb, _class_thread, "initialize", mrb_thread_init, MRB_ARGS_OPT(1));
   mrb_define_method(mrb, _class_thread, "join", mrb_thread_join, MRB_ARGS_NONE());
+#if 0
   mrb_define_method(mrb, _class_thread, "kill", mrb_thread_kill, MRB_ARGS_NONE());
   mrb_define_method(mrb, _class_thread, "terminate", mrb_thread_kill, MRB_ARGS_NONE());
+#endif
   mrb_define_method(mrb, _class_thread, "alive?", mrb_thread_alive, MRB_ARGS_NONE());
   mrb_define_module_function(mrb, _class_thread, "sleep", mrb_thread_sleep, MRB_ARGS_REQ(1));
   mrb_define_module_function(mrb, _class_thread, "start", mrb_thread_init, MRB_ARGS_REQ(1));
